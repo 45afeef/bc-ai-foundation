@@ -16,6 +16,14 @@ export interface Product extends NewProduct {
   custom_fields: { name: string; value: string }[];
 }
 
-export interface MinimalProduct extends NewProduct{
-  description:string;
+export interface MinimalProduct extends NewProduct {
+  description: string;
+  relatedProducts?: MinimalProduct[]
 }
+
+export interface StoreProducts {
+  bestSellingProducts: MinimalProduct[],
+  featuredProducts: MinimalProduct[],
+  newestProducts: MinimalProduct[],
+}
+

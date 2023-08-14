@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {generateNextChatReplay} from '~/server/google-ai';
 import { aiChatSchema, chatHistorySchema, productSchema } from './schema';
 
-import { fetchPageType } from '~/server/bigcommerce-api';
+import { fetchProductsByPageType } from '~/server/bigcommerce-api';
 import * as db from '~/lib/db';
 
 
@@ -20,11 +20,7 @@ export async function POST(req: NextRequest) {
     // Now we need to transform that into AI-consumable context data
     // We need to find the relevent products if there is url passed
     
-    var aiChatContext : typeof aiChatSchema;
-
-    aiChatContext = {chatHistory:[]};
-    
-    aiChatContext.chatHistory = []
+    var chatContextFromUI = {chatHistory : parsedParams.data.chat}
 
     if(parsedParams.data.url){
         // Check if the url is of a product or not
@@ -35,16 +31,18 @@ export async function POST(req: NextRequest) {
         
         const storeData = await db.getStoreByUrl(url.hostname)
 
-        const res = await fetchPageType(url.hostname,url.pathname,storeData.accessToken,storeData.storeHash)
-
-        if(res.pageType != "Product"){
-            var products = productSchema.safeParse(res.product)
+        const res = await fetchProductsByPageType(url.hostname,url.pathname,storeData.accessToken,storeData.storeHash)
+        
+        if(res.hasOwnProperty('name')){
+            chatContextFromUI['currentProduct'] = res
         }else{
-
+            chatContextFromUI['storeProducts'] = res
         }
     }
     
-    const description = await generateNextChatReplay(aiChatSchema.safeParse(aiChatContext));
+    var d =await aiChatSchema.safeParse(chatContextFromUI)
+    
+    const description = await generateNextChatReplay(d);
 
     return NextResponse.json({asfda:"this is afeef"})
 

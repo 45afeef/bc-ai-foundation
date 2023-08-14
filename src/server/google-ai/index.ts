@@ -41,7 +41,9 @@ export default async function generateDescription(
   return 'No response from Google AI';
 }
 
-export async function generateNextChatReplay(attributes: z.infer<typeof aiChatSchema>): Promise<string> {
+export async function generateNextChatReplay(
+  attributes//: z.infer<typeof aiChatSchema>
+): Promise<string> {
   return 'No response from Google AI'
 }
 

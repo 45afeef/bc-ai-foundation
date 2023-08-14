@@ -1,4 +1,4 @@
-import { type Product, type MinimalProduct } from 'types';
+import { type Product, type MinimalProduct,type StoreProducts } from 'types';
 import { fetchProduct, fetchCategories, fetchBrand } from './client';
 import { BIGCOMMERCE_API_URL } from '~/constants';
 
@@ -25,39 +25,42 @@ export const fetchProductWithAttributes = async (
   return { ...product, id, brand, categoriesNames } as Product;
 };
 
-export const fetchPageType = async (
+export const fetchProductsByPageType = async (
   storeUrl: string,
   pageUrl: string,
   accessToken: string,
   storeHash: string,
-): Promise<{ pageType: String, product?: MinimalProduct }> => {
+): Promise<MinimalProduct | StoreProducts> => {
 
   // Get the bearer token that expires at one minute
   var bearerToken = await createCustomerImpersonationToken(storeHash, accessToken)
 
-  const response = await fetch(
-    `https://${storeUrl}/graphql`,
-    {
-      method: 'POST',
-      headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-        'Authorization': `Bearer ${bearerToken}`,
-      },
-      body: JSON.stringify(getPageTypeByUrlQuery(pageUrl)),
-    }
-  );
+  const response = await fetchGraphQL(storeUrl, bearerToken, getPageTypeByUrlQuery(pageUrl))
 
   const parsedResponse = await response.json();
-  if (parsedResponse.data.site.route.node.__typename == "Product") {
+  var pageType = parsedResponse.data.site.route.node?.__typename
+  if (pageType == "Product") {
     var resProduct = parsedResponse.data.site.route.node;
-    var product: MinimalProduct = { id: resProduct.entityId, description: resProduct.description, name: resProduct.name }
+    var product: MinimalProduct = {
+      ...resProduct,
+      relatedProducts: resProduct.relatedProducts.edges.map(({ node }) => node)
+    }
+    delete product['__typename'];
 
-    return { pageType: "Product", product: product }
+    return product
+  } else {
+    const storeProductsResponse = await fetchGraphQL(storeUrl, bearerToken, getStoreProductsQuery())
+
+    const parsedStoreProductsResponse = await storeProductsResponse.json()
+
+    const storeProducts: StoreProducts = {
+      bestSellingProducts: parsedStoreProductsResponse.data.site.bestSellingProducts.edges.map(({ node }) => node),
+      featuredProducts: parsedStoreProductsResponse.data.site.featuredProducts.edges.map(({ node }) => node),
+      newestProducts: parsedStoreProductsResponse.data.site.newestProducts.edges.map(({ node }) => node),
+    }
+
+    return storeProducts
   }
-
-  return { pageType: parsedResponse.data.site.route.node.__typename as string }
-
 }
 
 const getPageTypeByUrlQuery = (urlPath) => ({
@@ -82,26 +85,44 @@ const getPageTypeByUrlQuery = (urlPath) => ({
         }
       }
       fragment ProductFields on Product{
-        entityId
+        id:entityId
         name
         description
-        warranty
-        minPurchaseQuantity
-        maxPurchaseQuantity
-        prices{
-          salePrice{value}
-          retailPrice{value}
-        }
-        weight{value}
-        height{value}
-        width{value}
-        depth{value}
       }`,
   variables: {
     urlPath: urlPath,
   },
 });
 
+const getStoreProductsQuery = () => ({
+  query: `
+    query {
+      site {
+        bestSellingProducts{
+          edges{
+            ...MinimalProduct
+          }
+        }
+        featuredProducts{
+          edges{
+            ...MinimalProduct
+          }
+        }
+        newestProducts{
+          edges{
+            ...MinimalProduct
+          }
+        }
+      }
+    }
+    fragment MinimalProduct on ProductEdge{
+      node{
+        id:entityId
+        name
+        description
+      }
+    }`,
+})
 
 const createCustomerImpersonationToken = async (storeHash: string, accessToken: string): Promise<string> => {
 
@@ -124,3 +145,16 @@ const createCustomerImpersonationToken = async (storeHash: string, accessToken: 
 
   return parsedResponse.data.token
 }
+
+const fetchGraphQL = async (storeUrl, bearerToken, query) => await fetch(
+  `https://${storeUrl}/graphql`,
+  {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      'Authorization': `Bearer ${bearerToken}`,
+    },
+    body: JSON.stringify(query),
+  }
+)
