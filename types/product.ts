@@ -15,3 +15,7 @@ export interface Product extends NewProduct {
   imagesDescriptions: string;
   custom_fields: { name: string; value: string }[];
 }
+
+export interface MinimalProduct extends NewProduct{
+  description:string;
+}

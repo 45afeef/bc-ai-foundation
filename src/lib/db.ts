@@ -2,10 +2,15 @@ import { initializeApp } from 'firebase/app';
 import {
   deleteDoc,
   doc,
+  collection,
   getDoc,
   getFirestore,
   setDoc,
   updateDoc,
+  query,
+  where,
+  getDocs,
+  limit,
 } from 'firebase/firestore';
 import { env } from '~/env.mjs';
 
@@ -105,4 +110,26 @@ export async function getStoreToken(storeHash: string): Promise<string | null> {
 export async function deleteStore(storeHash: string) {
   const ref = doc(db, 'store', storeHash);
   await deleteDoc(ref);
+}
+
+export async function getStoreUrl(params:string) {
+  
+}
+
+
+export async function getStoreByUrl(storeUrl:string) { 
+  const q = await query(
+    collection(db,'store'),
+    where("storeUrl","==",storeUrl),
+    limit(1),
+  )
+
+  const querySnapshot = await getDocs(q);
+
+  const store = querySnapshot.docs[0]
+
+  const storeHash = store ? store.id : ""
+  const accessToken = store?.data().accessToken
+
+  return {storeHash,accessToken}
 }

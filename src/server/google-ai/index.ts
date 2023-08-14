@@ -5,6 +5,7 @@ import { TextServiceClient } from '@google-ai/generativelanguage';
 
 import { DEFAULT_GUIDED_ATTRIBUTES, STYLE_OPTIONS } from '~/constants';
 import { type aiSchema } from '~/app/api/generateDescription/schema';
+import { type aiChatSchema } from '~/app/api/chat/schema';
 
 const MODEL_NAME = 'models/text-bison-001';
 const API_KEY = env.GOOGLE_API_KEY;
@@ -40,6 +41,10 @@ export default async function generateDescription(
   return 'No response from Google AI';
 }
 
+export async function generateNextChatReplay(attributes: z.infer<typeof aiChatSchema>): Promise<string> {
+  return 'No response from Google AI'
+}
+
 const prepareInput = (attributes: z.infer<typeof aiSchema>): string => {
   if ('customPrompt' in attributes) {
     return `Instruction: ${attributes.customPrompt}`;
@@ -58,9 +63,8 @@ const prepareInput = (attributes: z.infer<typeof aiSchema>): string => {
   } else {
     return `Style of writing: ["${DEFAULT_GUIDED_ATTRIBUTES.style}"]
         Word limit: [${DEFAULT_GUIDED_ATTRIBUTES.wordCount}]
-        SEO optimized: ["${
-          DEFAULT_GUIDED_ATTRIBUTES.optimizedForSeo ? 'yes' : 'no'
-        }"]`;
+        SEO optimized: ["${DEFAULT_GUIDED_ATTRIBUTES.optimizedForSeo ? 'yes' : 'no'
+      }"]`;
   }
 };
 
@@ -81,8 +85,8 @@ const prepareProductAttributes = (
         "videos descriptions": ${attributes.product.videosDescriptions}
         "imnages descritpions": ${attributes.product.imagesDescriptions}
         "custom_fields": ${attributes.product.custom_fields
-          .map((field) => `"${field.name}": "${field.value}"`)
-          .join(',')} `;
+        .map((field) => `"${field.name}": "${field.value}"`)
+        .join(',')} `;
   } else {
     return `Product attributes:
         "name": ${attributes.product?.name || ''} `;
