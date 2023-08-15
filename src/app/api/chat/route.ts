@@ -40,10 +40,10 @@ export async function POST(req: NextRequest) {
         }
     }
     
-    var d =await aiChatSchema.safeParse(chatContextFromUI)
+    var parsedSchema =await aiChatSchema.safeParse(chatContextFromUI)
     
-    const description = await generateNextChatReplay(d);
+    const replay = await generateNextChatReplay(parsedSchema);
 
-    return NextResponse.json({asfda:"this is afeef"})
+    return NextResponse.json({replay})
 
 }
