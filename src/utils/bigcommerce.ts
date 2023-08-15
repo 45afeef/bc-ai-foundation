@@ -34,4 +34,4 @@ export const fetchGraphQL = async (storeUrl, bearerToken, query) => await fetch(
         },
         body: JSON.stringify(query),
     }
-).then(e=>e.json())
+).then(e => e.json())

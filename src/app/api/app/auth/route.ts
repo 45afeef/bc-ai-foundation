@@ -6,6 +6,7 @@ import { env } from '~/env.mjs';
 import { createAppExtension } from '~/lib/appExtensions';
 import { BIGCOMMERCE_LOGIN_URL } from '~/constants';
 import { createCustomerImpersonationToken, fetchGraphQL } from '~/utils/bigcommerce';
+import { createScript } from '~/server/bigcommerce-api/client';
 
 const queryParamSchema = z.object({
   code: z.string(),
@@ -115,6 +116,21 @@ export async function GET(req: NextRequest) {
       'WARNING: App extensions scope is not enabled yet. To register app extensions update the scope in Developer Portal: https://devtools.bigcommerce.com'
     );
   }
+
+  /**
+   * For sotres that do not have the app install yet, create and inject the Chat UI script 
+   * using the BigCommerce ScriptAPI
+   */
+  const isContentScopeEnabled = scope.includes('store_v2_content') && scope.includes('store_content_checkout');
+  if (isContentScopeEnabled && storeHash) {
+    await createScript(accessToken, storeHash);
+  } else {
+    console.warn(
+      'WARNING: Both "Content Scope" and "Checkout Content Scope" are required. To inject the script to your frontend update the scope in Developer Portal: https://devtools.bigcommerce.com'
+    );
+  }
+
+
 
   const clientToken = jwt.sign(
     { userId: oauthUser.id, storeHash },

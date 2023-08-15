@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { BIGCOMMERCE_API_URL } from '~/constants';
 
+
 const productSchema = z.object({
   data: z.object({
     name: z.string(),
@@ -18,13 +19,16 @@ const productSchema = z.object({
   }),
 });
 
+
 const categorySchema = z.object({
   data: z.array(z.object({ name: z.string() })),
 });
 
+
 const brandSchema = z.object({
   data: z.object({ name: z.string().optional() }),
 });
+
 
 const fetchFromBigCommerceApi = (
   path: string,
@@ -39,6 +43,25 @@ const fetchFromBigCommerceApi = (
       'x-auth-token': accessToken,
     },
   });
+
+
+const postToBigCommerceApi = (
+  path: string,
+  accessToken: string,
+  storeHash: string,
+  body: string,
+) =>
+  fetch(`${BIGCOMMERCE_API_URL}/stores/${storeHash}/v3${path}`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'X-Auth-Token': accessToken,
+    },
+    body: body,
+  }).then(res => res.json())
+    .catch(err => console.error('error:' + err));
+
 
 export async function fetchProduct(
   productId: number,
@@ -74,6 +97,7 @@ export async function fetchProduct(
   };
 }
 
+
 export async function fetchCategories(
   categories: number[],
   accessToken: string,
@@ -101,6 +125,7 @@ export async function fetchCategories(
   return parsedCategories.data.data.map(({ name }) => name);
 }
 
+
 export async function fetchBrand(
   brandId: number,
   accessToken: string,
@@ -124,3 +149,25 @@ export async function fetchBrand(
 
   return parsedBrand.data.data.name;
 }
+
+
+export async function createScript(
+  accessToken: string,
+  storeHash: string,
+) {
+
+  var scriptUrl = {
+    name: "AI-Salesman",
+    description: "Makes your website the best online store with the help of customized AI-salesman for your store",
+    src: "https://cdn.jsdelivr.net/gh/Hackbigai/scripts/bc-ai-salesman.min.js",
+    auto_uninstall: true,
+    load_method: "default",
+    location: "footer",
+    visibility: "all_pages",
+    kind: "src",
+    consent_category: "essential"
+  }
+
+  return postToBigCommerceApi('/content/scripts', accessToken, storeHash, JSON.stringify(scriptUrl))
+}
+
