@@ -1,6 +1,6 @@
 import { type Product, type MinimalProduct,type StoreProducts } from 'types';
 import { fetchProduct, fetchCategories, fetchBrand } from './client';
-import { BIGCOMMERCE_API_URL } from '~/constants';
+import { createCustomerImpersonationToken, fetchGraphQL } from '~/utils/bigcommerce';
 
 export const fetchProductWithAttributes = async (
   id: number,
@@ -35,9 +35,8 @@ export const fetchProductsByPageType = async (
   // Get the bearer token that expires at one minute
   var bearerToken = await createCustomerImpersonationToken(storeHash, accessToken)
 
-  const response = await fetchGraphQL(storeUrl, bearerToken, getPageTypeByUrlQuery(pageUrl))
+  const parsedResponse = await fetchGraphQL(storeUrl, bearerToken, getPageTypeByUrlQuery(pageUrl))
 
-  const parsedResponse = await response.json();
   var pageType = parsedResponse.data.site.route.node?.__typename
   if (pageType == "Product") {
     var resProduct = parsedResponse.data.site.route.node;
@@ -49,9 +48,7 @@ export const fetchProductsByPageType = async (
 
     return product
   } else {
-    const storeProductsResponse = await fetchGraphQL(storeUrl, bearerToken, getStoreProductsQuery())
-
-    const parsedStoreProductsResponse = await storeProductsResponse.json()
+    const parsedStoreProductsResponse = await fetchGraphQL(storeUrl, bearerToken, getStoreProductsQuery())
 
     const storeProducts: StoreProducts = {
       bestSellingProducts: parsedStoreProductsResponse.data.site.bestSellingProducts.edges.map(({ node }) => node),
@@ -123,38 +120,3 @@ const getStoreProductsQuery = () => ({
       }
     }`,
 })
-
-const createCustomerImpersonationToken = async (storeHash: string, accessToken: string): Promise<string> => {
-
-  var expiryTime = Math.floor(new Date().getTime() / 1000) + 60 //86400
-
-  const response = await fetch(
-    `${BIGCOMMERCE_API_URL}/stores/${storeHash}/v3/storefront/api-token-customer-impersonation`,
-    {
-      method: 'POST',
-      headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-        'x-auth-token': accessToken,
-      },
-      body: JSON.stringify({ "channel_id": 1, "expires_at": expiryTime }),
-    }
-  );
-
-  const parsedResponse = await response.json()
-
-  return parsedResponse.data.token
-}
-
-const fetchGraphQL = async (storeUrl, bearerToken, query) => await fetch(
-  `https://${storeUrl}/graphql`,
-  {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      'Authorization': `Bearer ${bearerToken}`,
-    },
-    body: JSON.stringify(query),
-  }
-)

@@ -29,6 +29,7 @@ export interface AuthProps {
   context: string;
   scope?: string;
   user: User;
+  storeUrl?:string;
 }
 
 const { FIRE_API_KEY, FIRE_DOMAIN, FIRE_PROJECT_ID } = env;
@@ -65,13 +66,14 @@ export async function setStore(props: AuthProps) {
     context,
     scope,
     user: { id },
+    storeUrl,
   } = props;
   // Only set on app install or update
   if (!accessToken || !scope) return null;
 
   const storeHash = context?.split('/')[1] || '';
   const ref = doc(db, 'store', storeHash);
-  const data = { accessToken, adminId: id, scope };
+  const data = { accessToken, adminId: id, scope ,storeUrl};
 
   await setDoc(ref, data);
 }

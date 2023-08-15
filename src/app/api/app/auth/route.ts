@@ -5,6 +5,7 @@ import * as db from '~/lib/db';
 import { env } from '~/env.mjs';
 import { createAppExtension } from '~/lib/appExtensions';
 import { BIGCOMMERCE_LOGIN_URL } from '~/constants';
+import { createCustomerImpersonationToken, fetchGraphQL } from '~/utils/bigcommerce';
 
 const queryParamSchema = z.object({
   code: z.string(),
@@ -67,11 +68,30 @@ export async function GET(req: NextRequest) {
 
   const storeHash = context.split('/')[1];
 
+  const storeUrlQuery = () => ({
+    query: `
+      query{
+        site{
+          settings{
+            url{
+              vanityUrl
+            }
+          }
+        }
+      }
+    `,
+  })
+
+  var bearerToken = await createCustomerImpersonationToken(storeHash!, accessToken)
+
+  var parsedstoreUrlResponse = await fetchGraphQL(`store-${storeHash}.mybigcommerce.com`, bearerToken, storeUrlQuery())
+
   await db.setStore({
     access_token: accessToken,
     context,
     scope,
     user: oauthUser,
+    storeUrl: parsedstoreUrlResponse.data.site.settings.url.vanityUrl
   });
   await db.setUser(oauthUser);
   await db.setStoreUser({

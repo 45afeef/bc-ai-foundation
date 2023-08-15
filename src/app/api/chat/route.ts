@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         
         let url = (new URL(parsedParams.data.url));
         
-        const storeData = await db.getStoreByUrl(url.hostname)
+        const storeData = await db.getStoreByUrl(url.origin)
 
         const res = await fetchProductsByPageType(url.hostname,url.pathname,storeData.accessToken,storeData.storeHash)
         
