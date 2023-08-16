@@ -18,6 +18,7 @@ export interface Product extends NewProduct {
 
 export interface MinimalProduct extends NewProduct {
   description: string;
+  addToCartUrl: string;
   relatedProducts?: MinimalProduct[]
 }
 

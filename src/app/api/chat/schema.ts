@@ -26,10 +26,12 @@ const minimalProductSchema = z.object({
   id: z.number(),
   name: z.string(),
   description: z.string(),
+  addToCartUrl:z.string(),
   relatedProducts: z.object({
     id: z.number(),
     name: z.string(),
     description: z.string(),
+    addToCartUrl:z.string(),
   }).array(),
 })
 
@@ -58,16 +60,19 @@ export const aiChatSchema = z.union([
         id: z.number(),
         name: z.string(),
         description: z.string(),
+        addToCartUrl:z.string(),
       }).array(),
       featuredProducts: z.object({
         id: z.number(),
         name: z.string(),
         description: z.string(),
+        addToCartUrl:z.string(),
       }).array(),
       newestProducts: z.object({
         id: z.number(),
         name: z.string(),
         description: z.string(),
+        addToCartUrl:z.string(),
       }).array(),
     }),
   }),
@@ -80,10 +85,12 @@ export const aiChatSchema = z.union([
       id: z.number(),
       name: z.string(),
       description: z.string(),
+      addToCartUrl:z.string(),
       relatedProducts: z.object({
         id: z.number(),
         name: z.string(),
         description: z.string(),
+        addToCartUrl:z.string(),
       }).array(),
     }),
   }),

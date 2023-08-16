@@ -85,6 +85,7 @@ const getPageTypeByUrlQuery = (urlPath) => ({
         id:entityId
         name
         description
+        addToCartUrl
       }`,
   variables: {
     urlPath: urlPath,
@@ -117,6 +118,7 @@ const getStoreProductsQuery = () => ({
         id:entityId
         name
         description
+        addToCartUrl
       }
     }`,
 })

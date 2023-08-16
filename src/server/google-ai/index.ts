@@ -5,7 +5,7 @@ import { TextServiceClient, DiscussServiceClient } from '@google-ai/generativela
 
 import { DEFAULT_GUIDED_ATTRIBUTES, STYLE_OPTIONS } from '~/constants';
 import { type aiSchema } from '~/app/api/generateDescription/schema';
-import { type aiChatSchema } from '~/app/api/chat/schema';
+import { MinimalProduct } from 'types';
 
 const MODEL_NAME = 'models/text-bison-001';
 const CHAT_MODEL_NAME = 'models/chat-bison-001';
@@ -94,12 +94,10 @@ export async function generateNextChatReplay(
   attributes//: z.infer<typeof aiSchema>
 ): Promise<string> {
   attributes = attributes.data
-  const input = prepareChatInput();
   const productInfo = prepareProductsPrompt(attributes)
   const chatHistory = prepareChatHistory(attributes);
 
-  const prompt = `Respond to all questions As a friend.Act as an e-commerce salesman who walks along with online users throughout the user journey and try to sell the following products like a expert saleman. Always talk in friendly manner. Never promote any other companies product. Don't push to sale. Make the User always happy even if they are not buying, so be do more friendly talk 
-   ${input}
+  const prompt = `Respond to all questions As a friend.Act as an e-commerce salesman who walks along with online users throughout the user journey and try to sell the following products like a expert saleman. Always talk in friendly manner. Never promote any other companies product. Always try to make sales. Make the User always happy even if they are not buying ask them whether they cameback to this store. Keep each conversation minimum and bellow 50 words
    ${productInfo}`;
 
   try {
@@ -130,14 +128,16 @@ export async function generateNextChatReplay(
 }
 
 
-const prepareChatInput = () =>
-  `Style of writing: ["${DEFAULT_GUIDED_ATTRIBUTES.style}"]
-   Word limit: [${DEFAULT_GUIDED_ATTRIBUTES.wordCount}]`;
+function removeTagsAndSpecialCharacters(description) {
+  const pattern = /<[^>]*>|&[^;]*;|\n/g;
+  return description.replace(pattern, '');
+}
 
-const prepareProduct = (product): string => {
+const prepareProduct = (product: MinimalProduct): string => {
   return `"id":${product.id}
             "name":"${product.name}"
-            "description":"${product.description}"`
+            "description":"${removeTagsAndSpecialCharacters(product.description)}"
+            "add_to_cart_url":"${product.addToCartUrl}"`
 }
 
 const prepareProductsPrompt = (attributes): string => {
