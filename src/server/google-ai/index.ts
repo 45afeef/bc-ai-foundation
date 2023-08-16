@@ -6,6 +6,7 @@ import { TextServiceClient, DiscussServiceClient } from '@google-ai/generativela
 import { DEFAULT_GUIDED_ATTRIBUTES, STYLE_OPTIONS } from '~/constants';
 import { type aiSchema } from '~/app/api/generateDescription/schema';
 import { MinimalProduct } from 'types';
+import { Chat, ChatFromUI } from 'types/chat';
 
 const MODEL_NAME = 'models/text-bison-001';
 const CHAT_MODEL_NAME = 'models/chat-bison-001';
@@ -175,8 +176,23 @@ const prepareProductsPrompt = (attributes): string => {
   return ""
 }
 
-const prepareChatHistory = (attributes): { author: string, content: string }[] => {
-  return attributes.chatHistory.map(({ name, message }) => {
+const prepareChatHistory = (attributes): Chat[] => {
+  return alternateMessages(attributes.chatHistory).map(({ name, message }) => {
     return { author: name == "AI-Salesman" ? 0 : 1, content: message }
   })
+}
+
+const alternateMessages = (messages): ChatFromUI[] => {
+  var al: ChatFromUI[] = []
+  var index = 0
+  while (index < messages.length) {
+    const m = messages[index]
+    index++
+    while (index < messages.length && messages[index].name == m.name) {
+      m.message = m.message + ' - ' + messages[index].message
+      index++
+    }
+    al.push(m)
+  }
+  return al;
 }
