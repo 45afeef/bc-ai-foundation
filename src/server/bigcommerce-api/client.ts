@@ -156,10 +156,10 @@ export async function createScript(
   storeHash: string,
 ) {
 
-  var scriptUrl = {
+  const scriptUrl = {
     name: "AI-Salesman",
     description: "Makes your website the best online store with the help of customized AI-salesman for your store",
-    src: "https://cdn.jsdelivr.net/gh/Hackbigai/scripts/bc-ai-salesman.min.js",
+    src: "https://cdn.jsdelivr.net/gh/Hackbigai/scripts/bc-ai-salesman.js",
     auto_uninstall: true,
     load_method: "default",
     location: "footer",
@@ -171,3 +171,4 @@ export async function createScript(
   return postToBigCommerceApi('/content/scripts', accessToken, storeHash, JSON.stringify(scriptUrl))
 }
 
+const SCRIPTHTML = String();
