@@ -131,7 +131,8 @@ Only talk about company and its products.`;
         // optional, preamble context to prime responses
         context: prompt,
         // Required. Alternating prompt/response messages.
-        messages: JSON.parse(JSON.stringify(chatHistory)),
+        // @ts-ignore
+        messages: chatHistory,
       },
     });
 
