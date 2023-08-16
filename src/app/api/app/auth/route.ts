@@ -3,7 +3,6 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import * as db from '~/lib/db';
 import { env } from '~/env.mjs';
-import { createAppExtension } from '~/lib/appExtensions';
 import { BIGCOMMERCE_LOGIN_URL } from '~/constants';
 import { createCustomerImpersonationToken, fetchGraphQL } from '~/utils/bigcommerce';
 import { createScript } from '~/server/bigcommerce-api/client';
@@ -103,21 +102,6 @@ export async function GET(req: NextRequest) {
   });
 
   /**
-   * For stores that do not have the app installed yet, create App Extensions when app is
-   * installed.
-   */
-  const isAppExtensionsScopeEnabled = scope.includes(
-    'store_app_extensions_manage'
-  );
-  if (isAppExtensionsScopeEnabled && storeHash) {
-    await createAppExtension({ accessToken, storeHash });
-  } else {
-    console.warn(
-      'WARNING: App extensions scope is not enabled yet. To register app extensions update the scope in Developer Portal: https://devtools.bigcommerce.com'
-    );
-  }
-
-  /**
    * For sotres that do not have the app install yet, create and inject the Chat UI script 
    * using the BigCommerce ScriptAPI
    */
@@ -129,8 +113,6 @@ export async function GET(req: NextRequest) {
       'WARNING: Both "Content Scope" and "Checkout Content Scope" are required. To inject the script to your frontend update the scope in Developer Portal: https://devtools.bigcommerce.com'
     );
   }
-
-
 
   const clientToken = jwt.sign(
     { userId: oauthUser.id, storeHash },
