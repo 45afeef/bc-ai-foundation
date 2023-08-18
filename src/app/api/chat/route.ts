@@ -6,6 +6,17 @@ import { fetchProductsByPageType } from '~/server/bigcommerce-api';
 import * as db from '~/lib/db';
 
 
+
+export const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+export async function OPTIONS(req: NextRequest) {
+    return NextResponse.json({}, { headers: corsHeaders });
+}
+
 // The chatUI send a replay request 
 // We check if the comming req is from allowed origin
 export async function POST(req: NextRequest) {
@@ -44,6 +55,6 @@ export async function POST(req: NextRequest) {
     
     const replay = await generateNextChatReplay(parsedSchema);
 
-    return NextResponse.json({replay})
+    return NextResponse.json({replay}, { headers: corsHeaders })
 
 }
